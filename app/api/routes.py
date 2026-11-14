@@ -120,9 +120,7 @@ def toggle_task(id):
     if task.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
 
-    task.status = 'Completed' if task.status != 'Completed' else 'Pending'
-    if task.is_recurring and task.status == 'Completed':
-        ProductivityService.create_recurring_task(task)
+    TaskService.toggle_task_status(task)
     db.session.commit()
     return jsonify(task.to_dict())
 
