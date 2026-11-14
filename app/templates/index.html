@@ -1,204 +1,364 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard — Schedule Manager{% endblock %}
-{% block page_title %}Tasks{% endblock %}
+{% block title %}Dashboard & Schedule — Schedule Manager{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
 
-<section class="dashboard-heading" aria-labelledby="dashboard-title">
-    <div>
-        <p class="eyebrow">Your schedule</p>
-        <h1 id="dashboard-title">Tasks</h1>
-        <p class="dashboard-summary">
-            {% if analytics.overdue %}{{ analytics.overdue }} overdue{% else %}No overdue tasks{% endif %}
-        </p>
+<!-- ── Dashboard Header Greeting ──────────────────────────── -->
+<section class="dashboard-greeting-banner" aria-labelledby="greeting-title">
+  <div class="greeting-text-wrap">
+    <h1 id="greeting-title" class="greeting-title">
+      <span id="dynamic-greeting-prefix">Morning</span>, <span class="user-highlight">{{ current_user.username }}</span>!
+    </h1>
+    <p class="greeting-subtitle">Here's what's on your agenda today.</p>
+  </div>
+
+  <!-- Compact Stat Summary Pills -->
+  <div class="stats-pills-bar" role="region" aria-label="Task statistics">
+    <div class="stat-pill" title="Total Tasks">
+      <span class="stat-pill-label">Total</span>
+      <span class="stat-pill-value" id="stat-total">{{ stats.total }}</span>
     </div>
-    <a href="{{ url_for('main.add_task') }}" class="btn btn-primary">
-        <span aria-hidden="true">+</span> Add task
-    </a>
+    <div class="stat-pill stat-pending" title="Pending Tasks">
+      <span class="stat-pill-dot dot-pending"></span>
+      <span class="stat-pill-label">Pending</span>
+      <span class="stat-pill-value" id="stat-pending">{{ stats.pending }}</span>
+    </div>
+    <div class="stat-pill stat-progress" title="In Progress Tasks">
+      <span class="stat-pill-dot dot-progress"></span>
+      <span class="stat-pill-label">In Progress</span>
+      <span class="stat-pill-value" id="stat-progress">{{ stats.in_progress }}</span>
+    </div>
+    <div class="stat-pill stat-completed" title="Completed Tasks">
+      <span class="stat-pill-dot dot-completed"></span>
+      <span class="stat-pill-label">Completed</span>
+      <span class="stat-pill-value" id="stat-completed">{{ stats.completed }}</span>
+    </div>
+    {% if analytics.overdue > 0 %}
+    <div class="stat-pill stat-overdue" title="Overdue Tasks">
+      <span class="stat-pill-dot dot-overdue"></span>
+      <span class="stat-pill-label">Overdue</span>
+      <span class="stat-pill-value" id="stat-overdue">{{ analytics.overdue }}</span>
+    </div>
+    {% endif %}
+  </div>
 </section>
 
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-icon total">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
+<!-- ── Main Workspace: Two-Panel Calendar & Scheduled Split ──── -->
+<div class="schedule-workspace">
+  
+  <!-- ── Left / Center Column: Interactive Calendar Board ─── -->
+  <div class="calendar-panel">
+    <!-- Calendar Controls Header -->
+    <div class="calendar-controls-bar">
+      <div class="calendar-month-selector">
+        <h2 class="calendar-month-title" id="calendar-month-year-label">September 2025</h2>
+        <div class="calendar-stepper">
+          <button type="button" class="btn-step" id="cal-prev-month-btn" aria-label="Previous month">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <polyline points="15 18 9 12 15 6"/>
             </svg>
+          </button>
+          <button type="button" class="btn-step" id="cal-next-month-btn" aria-label="Next month">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
         </div>
-        <div>
-            <div class="stat-value" id="stat-total">{{ stats.total }}</div>
-            <div class="stat-label">Total Tasks</div>
-        </div>
+      </div>
+
+      <!-- View Switcher Pills -->
+      <div class="view-mode-tabs" role="group" aria-label="Workspace views">
+        <button type="button" class="view-tab-btn active" id="view-mode-calendar-btn" aria-pressed="true">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <span>Calendar</span>
+        </button>
+        <button type="button" class="view-tab-btn" id="view-mode-list-btn" aria-pressed="false">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="8" y1="6" x2="21" y2="6"/>
+            <line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          <span>All Tasks</span>
+        </button>
+      </div>
     </div>
 
-    <div class="stat-card">
-        <div class="stat-icon pending">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-            </svg>
-        </div>
-        <div>
-            <div class="stat-value" id="stat-pending">{{ stats.pending }}</div>
-            <div class="stat-label">Pending</div>
-        </div>
+    <!-- Calendar View Container -->
+    <div id="calendar-view-container" class="calendar-view-container">
+      <!-- Weekday Headers -->
+      <div class="calendar-weekdays-row">
+        <span>Sunday</span>
+        <span>Monday</span>
+        <span>Tuesday</span>
+        <span>Wednesday</span>
+        <span>Thursday</span>
+        <span>Friday</span>
+        <span>Saturday</span>
+      </div>
+
+      <!-- Interactive Days Grid -->
+      <div id="calendar-days-grid" class="calendar-days-grid">
+        <!-- Rendered dynamically by script.js -->
+      </div>
     </div>
 
-    <div class="stat-card">
-        <div class="stat-icon progress">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <polyline points="23 4 23 10 17 10" />
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-            </svg>
-        </div>
-        <div>
-            <div class="stat-value" id="stat-progress">{{ stats.in_progress }}</div>
-            <div class="stat-label">In Progress</div>
-        </div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon completed">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-        </div>
-        <div>
-            <div class="stat-value" id="stat-completed">{{ stats.completed }}</div>
-            <div class="stat-label">Completed</div>
-        </div>
-    </div>
-</div>
-
-<!-- ── Filter Bar ─────────────────────────────────────────── -->
-<div class="filter-bar">
-    <!-- Status tabs -->
-    <div class="filter-tabs" role="group" aria-label="Filter tasks by status">
+    <!-- Filter Bar (For All Tasks view & live sorting) -->
+    <div class="filter-bar" id="tasks-filter-bar">
+      <!-- Status tabs -->
+      <div class="filter-tabs" role="group" aria-label="Filter tasks by status">
         <button class="filter-tab active" type="button" data-status="" aria-pressed="true">All</button>
         <button class="filter-tab" type="button" data-status="Pending" aria-pressed="false">Pending</button>
         <button class="filter-tab" type="button" data-status="In Progress" aria-pressed="false">In Progress</button>
         <button class="filter-tab" type="button" data-status="Completed" aria-pressed="false">Completed</button>
+      </div>
+
+      <div class="filter-selects-wrap">
+        <!-- Category filter -->
+        <label class="sr-only" for="category-filter">Filter by category</label>
+        <select class="filter-select" id="category-filter">
+          <option value="">All Categories</option>
+          <option value="General">General</option>
+          <option value="Work">Work</option>
+          <option value="Personal">Personal</option>
+          <option value="Study">Study</option>
+          <option value="Health">Health</option>
+        </select>
+
+        <!-- Priority filter -->
+        <label class="sr-only" for="priority-filter">Filter by priority</label>
+        <select class="filter-select" id="priority-filter">
+          <option value="">All Priorities</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </div>
     </div>
 
-    <!-- Search -->
-    <div class="search-wrap">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        <label class="sr-only" for="search-input">Search tasks</label>
-        <input class="search-input" id="search-input" type="search" placeholder="Search tasks">
-    </div>
+    <!-- ── Full Task Grid (Interactive & Accessible) ─────── -->
+    <div class="tasks-grid-wrapper" id="tasks-grid-wrapper">
+      <h2 class="section-subheading" id="task-list-heading">Task Library</h2>
+      <div class="tasks-grid" id="tasks-grid">
+        {% if tasks %}
+        {% for task in tasks %}
+        <article class="task-card priority-{{ task.priority | lower }} {% if task.status == 'Completed' %}status-completed{% endif %}"
+          data-title="{{ task.title | lower }}"
+          data-status="{{ task.status }}"
+          data-category="{{ task.category }}"
+          data-priority="{{ task.priority }}"
+          data-due-date="{{ task.due_date.isoformat() if task.due_date else '' }}"
+          id="task-card-{{ task.id }}"
+          aria-labelledby="task-title-{{ task.id }}">
 
-    <!-- Category filter -->
-    <label class="sr-only" for="category-filter">Filter by category</label>
-    <select class="filter-select" id="category-filter">
-        <option value="">All Categories</option>
-        <option value="General">General</option>
-        <option value="Work">Work</option>
-        <option value="Personal">Personal</option>
-        <option value="Study">Study</option>
-        <option value="Health">Health</option>
-    </select>
+          <!-- Card Top Accent Bar -->
+          <div class="task-card-accent-bar accent-{{ task.priority | lower }}"></div>
 
-    <!-- Priority filter -->
-    <label class="sr-only" for="priority-filter">Filter by priority</label>
-    <select class="filter-select" id="priority-filter">
-        <option value="">All Priorities</option>
-        <option value="High">High</option>
-        <option value="Medium">Medium</option>
-        <option value="Low">Low</option>
-    </select>
-</div>
-
-<!-- ── Task Grid ──────────────────────────────────────────── -->
-<h2 class="sr-only" id="task-list-heading">Task list</h2>
-<div class="tasks-grid" id="tasks-grid">
-    {% if tasks %}
-    {% for task in tasks %}
-    <article class="task-card priority-{{ task.priority | lower }}
-                {% if task.status == 'Completed' %}status-completed{% endif %}" data-title="{{ task.title | lower }}"
-        data-status="{{ task.status }}" data-category="{{ task.category }}" data-priority="{{ task.priority }}"
-        id="task-card-{{ task.id }}" aria-labelledby="task-title-{{ task.id }}">
-
-        <!-- Top row: check + title + priority badge -->
-        <div class="task-card-top">
+          <!-- Top row: check + title + priority badge -->
+          <div class="task-card-top">
             <button type="button" class="task-check {% if task.status == 'Completed' %}done{% endif %}"
-                data-task-action="toggle" data-task-id="{{ task.id }}"
-                aria-label="{{ 'Reopen' if task.status == 'Completed' else 'Complete' }} task: {{ task.title }}"
-                aria-pressed="{{ 'true' if task.status == 'Completed' else 'false' }}">
-                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                    <polyline points="20 6 9 17 4 12" />
-                </svg>
+              data-task-action="toggle" data-task-id="{{ task.id }}"
+              aria-label="{{ 'Reopen' if task.status == 'Completed' else 'Complete' }} task: {{ task.title }}"
+              aria-pressed="{{ 'true' if task.status == 'Completed' else 'false' }}">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             </button>
             <div class="task-title-wrap">
-                <h3 id="task-title-{{ task.id }}" class="task-title {% if task.status == 'Completed' %}done{% endif %}">{{ task.title }}</h3>
+              <h3 id="task-title-{{ task.id }}" class="task-title {% if task.status == 'Completed' %}done{% endif %}">{{ task.title }}</h3>
             </div>
-            <span class="chip chip-priority-{{ task.priority | lower }}">Priority: {{ task.priority }}</span>
-        </div>
+            <span class="chip chip-priority-{{ task.priority | lower }}">{{ task.priority }}</span>
+          </div>
 
-        <!-- Description -->
-        {% if task.description %}
-        <p class="task-desc">{{ task.description }}</p>
-        {% endif %}
+          <!-- Description -->
+          {% if task.description %}
+          <p class="task-desc">{{ task.description }}</p>
+          {% endif %}
 
-        <!-- Chips row -->
-        <div class="task-meta">
-            <!-- Status -->
-            <span class="chip status-chip
-          {% if task.status == 'Completed' %}chip-status-completed
-          {% elif task.status == 'In Progress' %}chip-status-progress
-          {% else %}chip-status-pending{% endif %}">
-                {{ task.status }}
+          <!-- Chips row -->
+          <div class="task-meta">
+            <span class="chip status-chip {% if task.status == 'Completed' %}chip-status-completed{% elif task.status == 'In Progress' %}chip-status-progress{% else %}chip-status-pending{% endif %}">
+              {{ task.status }}
             </span>
-            <!-- Category -->
             <span class="chip chip-category">{{ task.category }}</span>
-            <!-- Due date -->
             {% if task.due_date %}
-            <span class="chip chip-date{% if task.status != 'Completed' and task.due_date < today %} overdue{% endif %}">
-                {% if task.status != 'Completed' and task.due_date < today %}Overdue · {% endif %}
-                {{ task.due_date.strftime('%b %d, %Y') }}
+            <span class="chip chip-date {% if task.status != 'Completed' and task.due_date < today %}overdue{% endif %}">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              {% if task.status != 'Completed' and task.due_date < today %}Overdue · {% endif %}
+              {{ task.due_date.strftime('%b %d, %Y') }}
             </span>
             {% endif %}
-        </div>
+            {% if task.is_recurring %}
+            <span class="chip chip-recurring" title="Repeats every {{ task.recurrence_interval }} {{ task.recurrence_unit }}(s)">
+              ↻ {{ task.recurrence_interval }} {{ task.recurrence_unit }}
+            </span>
+            {% endif %}
+          </div>
 
-        <!-- Actions -->
-        <div class="task-actions">
+          <!-- Actions -->
+          <div class="task-actions">
             <a href="{{ url_for('main.edit_task', id=task.id) }}" class="btn btn-ghost btn-sm">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-                Edit
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              Edit
             </a>
             <button type="button" class="btn btn-danger btn-sm"
-                aria-label="Delete task: {{ task.title }}"
-                data-task-action="delete" data-task-id="{{ task.id }}">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6l-1 14H6L5 6" />
-                    <path d="M10 11v6" />
-                    <path d="M14 11v6" />
-                    <path d="M9 6V4h6v2" />
-                </svg>
-                Delete
+              aria-label="Delete task: {{ task.title }}"
+              data-task-action="delete" data-task-id="{{ task.id }}">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14H6L5 6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+                <path d="M9 6V4h6v2" />
+              </svg>
+              Delete
             </button>
+          </div>
         </article>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state" id="empty-state" role="status">
+          <div class="empty-icon-box">
+            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </div>
+          <h3>No tasks yet</h3>
+          <p>Schedule your first activity or task to get started.</p>
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('open-quick-modal-btn')?.click()">
+            + Add your first task
+          </button>
+        </div>
+        {% endif %}
+      </div>
     </div>
-    {% endfor %}
-    {% else %}
-    <div class="empty-state" id="empty-state" role="status">
-        <h3>No tasks yet</h3>
-        <p>Add a task to keep your schedule up to date.</p>
-        <a href="{{ url_for('main.add_task') }}" class="btn btn-primary">
-            Add your first task
-        </a>
+  </div>
+
+  <!-- ── Right Column: Scheduled Daily Timeline Panel ─────── -->
+  <aside class="scheduled-panel" aria-labelledby="scheduled-panel-title">
+    <div class="scheduled-panel-header">
+      <div>
+        <h2 class="scheduled-title" id="scheduled-panel-title">Scheduled</h2>
+        <p class="scheduled-date-subtitle" id="scheduled-selected-date-label">Today</p>
+      </div>
+
+      <div class="scheduled-stepper">
+        <button type="button" class="btn-step" id="sched-prev-day-btn" title="Previous day" aria-label="Previous day">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <button type="button" class="btn-step" id="sched-next-day-btn" title="Next day" aria-label="Next day">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
     </div>
-    {% endif %}
+
+    <!-- Scheduled Task Cards Timeline (Rendered by JS based on selected date) -->
+    <div class="scheduled-timeline" id="scheduled-timeline">
+      <!-- Injected by script.js with the vibrant top-bar cards from reference image -->
+    </div>
+
+    <!-- Quick Add to Selected Date -->
+    <div class="scheduled-footer">
+      <button type="button" class="btn btn-secondary btn-block" id="scheduled-quick-add-btn">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span>Schedule for this day</span>
+      </button>
+    </div>
+  </aside>
+</div>
+
+<!-- ── Quick Task Modal ("Brainstorm Session" Popover) ────── -->
+<div class="modal-backdrop" id="quick-task-modal" hidden>
+  <div class="quick-modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
+    <div class="quick-modal-header">
+      <h3 id="modal-heading" class="quick-modal-title">Brainstorm Session</h3>
+      <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Close modal">✕</button>
+    </div>
+
+    <form id="quick-task-form">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+      <div class="modal-field">
+        <label class="modal-label" for="quick-title">Title</label>
+        <input class="modal-input" type="text" id="quick-title" name="title" required maxlength="100" placeholder="e.g. Brainstorm Session" autofocus>
+      </div>
+
+      <div class="modal-field-row">
+        <div class="modal-field">
+          <label class="modal-label" for="quick-due-date">Date</label>
+          <input class="modal-input" type="date" id="quick-due-date" name="due_date">
+        </div>
+
+        <div class="modal-field">
+          <label class="modal-label" for="quick-category">Category</label>
+          <select class="modal-select" id="quick-category" name="category">
+            <option value="General">General</option>
+            <option value="Work" selected>Work</option>
+            <option value="Personal">Personal</option>
+            <option value="Study">Study</option>
+            <option value="Health">Health</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-field">
+        <label class="modal-label">Priority</label>
+        <div class="priority-pills-row">
+          <label class="priority-pill-option priority-high">
+            <input type="radio" name="priority" value="High">
+            <span class="pill-dot dot-orange"></span>
+            <span>High</span>
+          </label>
+          <label class="priority-pill-option priority-medium">
+            <input type="radio" name="priority" value="Medium" checked>
+            <span class="pill-dot dot-lime"></span>
+            <span>Medium</span>
+          </label>
+          <label class="priority-pill-option priority-low">
+            <input type="radio" name="priority" value="Low">
+            <span class="pill-dot dot-blue"></span>
+            <span>Low</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-field">
+        <label class="modal-label" for="quick-description">Note</label>
+        <textarea class="modal-textarea" id="quick-description" name="description" rows="3" placeholder="Add Note..."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary btn-save" id="quick-save-btn">
+          <span>Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 
 {% endblock %}
