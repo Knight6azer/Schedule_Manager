@@ -7,47 +7,49 @@
 {% set values = form_data|default({}) %}
 <div class="form-container">
     <div class="form-card">
-        <div class="form-title">{{ 'Edit Task' if task else 'Create New Task' }}</div>
-        <div class="form-subtitle">
-            {{ 'Update the details for your task.' if task else 'Fill in the details below to add a new task to your
-            schedule.' }}
+        <div class="form-header-bar">
+            <div class="form-title">{{ 'Edit Task' if task else 'Create New Task' }}</div>
+            <div class="form-subtitle">
+                {{ 'Update details and schedule for your task.' if task else 'Fill in the details below to add a new task to your schedule.' }}
+            </div>
         </div>
 
-        <form method="POST">
+        <form method="POST" class="styled-form">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
             <div class="form-group">
                 <label class="form-label" for="title">Task Title *</label>
                 <input class="form-control" type="text" id="title" name="title"
                     value="{{ values.get('title', task.title if task else '') or '' }}"
-                    maxlength="100" required autocomplete="off" placeholder="e.g. Finish quarterly report" autofocus>
+                    maxlength="100" required autocomplete="off" placeholder="e.g. Brainstorm Session" autofocus>
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="description">Description</label>
-                <textarea class="form-control" id="description" name="description" rows="4"
-                    placeholder="Add any extra details or context">{{ values.get('description', task.description if task else '') or '' }}</textarea>
+                <label class="form-label" for="description">Description / Note</label>
+                <textarea class="form-control" id="description" name="description" rows="3"
+                    placeholder="Add details, links, or meeting notes...">{{ values.get('description', task.description if task else '') or '' }}</textarea>
             </div>
 
             <div class="form-grid-2">
-                <div class="form-group" style="margin-bottom:0">
+                <div class="form-group">
                     <label class="form-label" for="priority">Priority</label>
                     {% set selected_priority = values.get('priority', task.priority if task else 'Medium') %}
                     <select class="form-control" id="priority" name="priority">
-                        <option value="High" {% if selected_priority == 'High' %}selected{% endif %}>High</option>
-                        <option value="Medium" {% if selected_priority == 'Medium' %}selected{% endif %}>Medium</option>
-                        <option value="Low" {% if selected_priority == 'Low' %}selected{% endif %}>Low</option>
+                        <option value="High" {% if selected_priority == 'High' %}selected{% endif %}>● High Priority (Coral)</option>
+                        <option value="Medium" {% if selected_priority == 'Medium' %}selected{% endif %}>● Medium Priority (Lime)</option>
+                        <option value="Low" {% if selected_priority == 'Low' %}selected{% endif %}>● Low Priority (Blue)</option>
                     </select>
                 </div>
 
-                <div class="form-group" style="margin-bottom:0">
+                <div class="form-group">
                     <label class="form-label" for="due_date">Due Date</label>
                     <input class="form-control" type="date" id="due_date" name="due_date"
                         value="{{ values.get('due_date', task.due_date.strftime('%Y-%m-%d') if task and task.due_date else '') or '' }}">
                 </div>
             </div>
 
-            <div class="form-grid-2" style="margin-top:1.25rem">
-                <div class="form-group" style="margin-bottom:0">
+            <div class="form-grid-2">
+                <div class="form-group">
                     <label class="form-label" for="category">Category</label>
                     {% set selected_category = values.get('category', task.category if task else 'General') %}
                     <select class="form-control" id="category" name="category">
@@ -60,7 +62,7 @@
                 </div>
 
                 {% if task %}
-                <div class="form-group" style="margin-bottom:0">
+                <div class="form-group">
                     <label class="form-label" for="status">Status</label>
                     {% set selected_status = values.get('status', task.status) %}
                     <select class="form-control" id="status" name="status">
@@ -69,29 +71,40 @@
                         <option value="Completed" {% if selected_status == 'Completed' %}selected{% endif %}>Completed</option>
                     </select>
                 </div>
+                {% else %}
+                <div class="form-group">
+                    <label class="form-label" for="status">Status</label>
+                    <select class="form-control" id="status" name="status">
+                        <option value="Pending" selected>Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
                 {% endif %}
             </div>
 
-            <div class="form-grid-2" style="margin-top:1.25rem">
-                <div class="form-group" style="margin-bottom:0">
-                    <label class="form-label" for="is_recurring">Repeat this task</label>
-                    <label class="toggle-wrap">
-                        <input type="checkbox" id="is_recurring" name="is_recurring" value="true"
-                            aria-label="Repeat this task"
-                            {% if values.get('is_recurring', task.is_recurring if task else false) in [true, 'true', 'on', '1'] %}checked{% endif %}>
-                        <span class="toggle-slider"></span>
-                    </label>
+            <!-- Recurrence Switch -->
+            <div class="form-group toggle-row">
+                <div>
+                    <label class="form-label" for="is_recurring" style="margin-bottom:0.2rem">Repeat this task</label>
+                    <span class="form-subtext">Automatically creates next task upon completion</span>
                 </div>
+                <label class="toggle-wrap">
+                    <input type="checkbox" id="is_recurring" name="is_recurring" value="true"
+                        aria-label="Repeat this task"
+                        {% if values.get('is_recurring', task.is_recurring if task else false) in [true, 'true', 'on', '1'] %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
 
-            <div id="recurrence-fields" class="form-grid-2" style="margin-top:1.25rem"
+            <div id="recurrence-fields" class="form-grid-2"
                 {% if not values.get('is_recurring', task.is_recurring if task else false) %}hidden{% endif %}>
-                <div class="form-group" style="margin-bottom:0">
+                <div class="form-group">
                     <label class="form-label" for="recurrence_interval">Repeat Every</label>
                     <input class="form-control" type="number" id="recurrence_interval" name="recurrence_interval"
                         min="1" max="30" value="{{ values.get('recurrence_interval', task.recurrence_interval if task and task.recurrence_interval else 1) }}">
                 </div>
-                <div class="form-group" style="margin-bottom:0">
+                <div class="form-group">
                     <label class="form-label" for="recurrence_unit">Unit</label>
                     {% set selected_unit = values.get('recurrence_unit', task.recurrence_unit if task else 'day') %}
                     <select class="form-control" id="recurrence_unit" name="recurrence_unit">
@@ -103,24 +116,23 @@
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary" style="flex:1; padding:0.8rem;">
+                <button type="submit" class="btn btn-primary btn-save">
                     {% if task %}
                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                         <polyline points="17 21 17 13 7 13 7 21" />
                         <polyline points="7 3 7 8 15 8" />
                     </svg>
-                    Save Changes
+                    <span>Save Changes</span>
                     {% else %}
                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <line x1="12" y1="5" x2="12" y2="19" />
                         <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
-                    Create Task
+                    <span>Create Task</span>
                     {% endif %}
                 </button>
-                <a href="{{ url_for('main.index') }}" class="btn btn-ghost"
-                    style="flex:0 0 auto; padding:0.8rem 1.5rem;">
+                <a href="{{ url_for('main.index') }}" class="btn btn-ghost">
                     Cancel
                 </a>
             </div>
