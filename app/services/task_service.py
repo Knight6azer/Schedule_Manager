@@ -122,6 +122,16 @@ class TaskService:
         }
 
     @staticmethod
+    def toggle_task_status(task: Any) -> Any:
+        """Toggle task status between Pending and Completed, generating recurrence if needed."""
+        from app.services.productivity_service import ProductivityService
+
+        task.status = 'Completed' if getattr(task, 'status', '') != 'Completed' else 'Pending'
+        if getattr(task, 'is_recurring', False) and task.status == 'Completed':
+            ProductivityService.create_recurring_task(task)
+        return task
+
+    @staticmethod
     def build_task_statistics(tasks: list[Any]) -> dict[str, int]:
         stats = {'total': 0, 'pending': 0, 'in_progress': 0, 'completed': 0}
         for task in tasks or []:
