@@ -10,22 +10,24 @@ from app.extensions import db
 class ProductivityService:
     @staticmethod
     def build_dashboard_analytics(tasks: list[Task]) -> dict[str, Any]:
-        total = len(tasks)
-        completed = sum(1 for task in tasks if task.status == 'Completed')
-        pending = sum(1 for task in tasks if task.status == 'Pending')
-        in_progress = sum(1 for task in tasks if task.status == 'In Progress')
+        from app.services.task_service import TaskService
+
+        stats = TaskService.build_task_statistics(tasks)
+        today = datetime.now(timezone.utc).date()
         overdue = sum(
             1
             for task in tasks
-            if task.due_date and task.due_date < datetime.now(timezone.utc).date() and task.status != 'Completed'
+            if getattr(task, 'due_date', None) and task.due_date < today and getattr(task, 'status', '') != 'Completed'
         )
         recurring = sum(1 for task in tasks if getattr(task, 'is_recurring', False))
+        total = stats['total']
+        completed = stats['completed']
         completion_rate = round((completed / total) * 100, 1) if total else 0.0
         return {
             'total': total,
             'completed': completed,
-            'pending': pending,
-            'in_progress': in_progress,
+            'pending': stats['pending'],
+            'in_progress': stats['in_progress'],
             'overdue': overdue,
             'recurring': recurring,
             'completion_rate': completion_rate,
