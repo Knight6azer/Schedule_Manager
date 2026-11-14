@@ -144,9 +144,7 @@ def complete_task(id):
     if task.user_id != current_user.id:
         flash('Permission denied.', 'danger')
         return redirect(url_for('main.index'))
-    task.status = 'Completed' if task.status != 'Completed' else 'Pending'
-    if task.is_recurring and task.status == 'Completed':
-        ProductivityService.create_recurring_task(task)
+    TaskService.toggle_task_status(task)
     db.session.commit()
     return redirect(url_for('main.index'))
 
