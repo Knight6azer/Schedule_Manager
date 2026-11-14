@@ -70,6 +70,14 @@ class TaskServiceTests(unittest.TestCase):
             'completed': 3,
         })
 
+    def test_toggle_task_status_switches_between_pending_and_completed(self):
+        task = SimpleNamespace(status='Pending', is_recurring=False)
+        TaskService.toggle_task_status(task)
+        self.assertEqual(task.status, 'Completed')
+
+        TaskService.toggle_task_status(task)
+        self.assertEqual(task.status, 'Pending')
+
 
 if __name__ == '__main__':
     unittest.main()
