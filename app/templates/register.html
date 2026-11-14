@@ -6,28 +6,29 @@
     <div class="auth-brand">
         <div class="auth-brand-content">
             <div class="auth-brand-icon">
-                <svg width="36" height="36" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                    <line x1="8" y1="14" x2="16" y2="14" />
-                    <line x1="8" y1="18" x2="12" y2="18" />
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h6v6H4z"/>
+                    <path d="M14 4h6v6h-6z"/>
+                    <path d="M4 14h6v6H4z"/>
+                    <path d="M17 14l3 3-3 3"/>
                 </svg>
             </div>
             <div class="auth-brand-title">Schedule Manager</div>
             <div class="auth-brand-sub">
-                Create an account to keep your personal task list in one place.
+                Join a modern productivity environment built to organize your time and keep your goals in focus.
             </div>
             <div class="auth-features">
                 <div class="auth-feature">
-                    <span>Organize tasks by priority</span>
+                    <span class="auth-feature-dot dot-orange"></span>
+                    <span>Organize tasks by priority and category</span>
                 </div>
                 <div class="auth-feature">
-                    <span>Set due dates and categories</span>
+                    <span class="auth-feature-dot dot-lime"></span>
+                    <span>Set deadlines with calendar day mapping</span>
                 </div>
                 <div class="auth-feature">
-                    <span>Track what is complete</span>
+                    <span class="auth-feature-dot dot-blue"></span>
+                    <span>Track progress with real-time stats</span>
                 </div>
             </div>
         </div>
@@ -37,35 +38,34 @@
     <div class="auth-form-panel">
         <div class="auth-form-box">
             <div class="auth-form-title">Create account</div>
-            <div class="auth-form-sub">Create an account to get started with your task list.</div>
+            <div class="auth-form-sub">Start managing your personal and professional schedule.</div>
 
-            <form method="POST">
+            <form method="POST" class="auth-form">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
                 <div class="form-group">
                     <label class="form-label" for="username">Username</label>
                     <input class="form-control" type="text" id="username" name="username" required
                         minlength="3" maxlength="20" autocomplete="username"
-                        placeholder="Choose a username" autofocus>
+                        placeholder="Alex" autofocus>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="email">Email Address</label>
                     <input class="form-control" type="email" id="email" name="email" required
-                        maxlength="120" autocomplete="email" placeholder="you@example.com">
+                        maxlength="120" autocomplete="email" placeholder="alex@example.com">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="password">Password</label>
                     <input class="form-control" type="password" id="password" name="password" required
                         minlength="6" maxlength="128" autocomplete="new-password"
-                        placeholder="Choose a password">
+                        placeholder="••••••••••••">
                 </div>
 
-                <button type="submit" class="btn btn-primary"
-                    style="width:100%; padding:0.8rem; margin-top:0.5rem; font-size:0.95rem;">
-                    Create Account
+                <button type="submit" class="btn btn-primary btn-save btn-block" style="margin-top:0.75rem;">
+                    <span>Create Account</span>
                 </button>
             </form>
 
-            <p style="margin-top:1.5rem; text-align:center; color:var(--text-muted); font-size:0.9rem;">
+            <p class="auth-switch-text">
                 Already have an account?
                 <a href="{{ url_for('auth.login') }}" class="auth-link">Sign in instead</a>
             </p>
