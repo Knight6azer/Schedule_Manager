@@ -45,14 +45,19 @@ class DeploymentTests(unittest.TestCase):
             TESTING = False
             SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
 
-        with patch.dict(os.environ, {'APP_ENV': '', 'SECRET_KEY': ''}):
+        with patch.dict(os.environ, {'APP_ENV': '', 'SECRET_KEY': '', 'VERCEL': ''}):
             with self.assertRaisesRegex(RuntimeError, 'SECRET_KEY'):
                 create_app(ProductionConfig)
 
-    def test_vercel_requires_persistent_database_url(self):
+    def test_vercel_uses_tmp_sqlite_fallback_when_database_url_empty(self):
         with patch.dict(os.environ, {'VERCEL': '1', 'DATABASE_URL': ''}):
-            with self.assertRaisesRegex(RuntimeError, 'DATABASE_URL'):
-                _get_db_uri()
+            uri = _get_db_uri()
+            self.assertTrue(uri.startswith('sqlite:///'))
+            self.assertIn('schedule_v2.db', uri)
+
+    def test_vercel_uses_postgres_when_database_url_provided(self):
+        with patch.dict(os.environ, {'VERCEL': '1', 'DATABASE_URL': 'postgres://user:pass@ep-host.neon.tech/neondb'}):
+            self.assertEqual(_get_db_uri(), 'postgresql://user:pass@ep-host.neon.tech/neondb')
 
     def test_csrf_rejects_mutation_without_token(self):
         class CsrfConfig(Config):
