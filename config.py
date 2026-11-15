@@ -1,5 +1,6 @@
 
 import os
+import tempfile
 from datetime import timedelta
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -9,7 +10,7 @@ def _get_db_uri():
     """
     Priority:
       1. DATABASE_URL env var (Neon, Supabase, any external Postgres)
-      2. SQLite in /tmp  for Vercel (ephemeral fallback)
+      2. SQLite in /tmp for Vercel (ephemeral fallback so the app works out of the box)
       3. Local SQLite file for development
     """
     url = os.environ.get('DATABASE_URL')
@@ -19,7 +20,11 @@ def _get_db_uri():
             url = url.replace('postgres://', 'postgresql://', 1)
         return url
     if os.environ.get('VERCEL'):
-        raise RuntimeError('DATABASE_URL is required on Vercel because its local filesystem is ephemeral.')
+        tmp_dir = '/tmp' if os.name != 'nt' else tempfile.gettempdir()
+        db_path = os.path.join(tmp_dir, 'schedule_v2.db').replace('\\', '/')
+        if db_path.startswith('/'):
+            return f'sqlite:///{db_path}'
+        return f'sqlite:///{db_path}'
     return 'sqlite:///' + os.path.join(basedir, 'schedule_v2.db')
 
 
